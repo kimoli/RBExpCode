@@ -1,7 +1,7 @@
 function [data] = concatData(basedir, xlsdata, col, idx)
 
 data.eyelidpos = [];
-data.mouse = {};
+data.mouse = [];
 data.day = [];
 data.csdur = [];
 data.lasdur = [];
@@ -44,7 +44,7 @@ for i = 1:length(idx)
     data.lasamp = [data.lasamp; trials.laser.amp];
     
     while size(data.day,1) < size(data.csdur,1)
-        data.mouse{end+1,1} = mouse;
+        data.mouse(end+1,1) = str2double(mouse(3:end));
         data.day(end+1,1) = day;
     end
     
