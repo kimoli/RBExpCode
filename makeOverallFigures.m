@@ -1,7 +1,16 @@
 close all
 clear all
 
-basedir = 'E:\pcp2ChR2 data\rebound';
+machine = 'COMPUPITAR';
+
+if strcmpi(machine, 'OREK')
+    basedir = 'E:\pcp2ChR2 data\rebound';
+elseif strcmpi(machine, 'COMPUPITAR')
+    basedir = 'D:\pcp2ChR2 data\rebound';
+else
+    disp('Please specify computer so we know what directory to use')
+    basedir = '';
+end
 cd(basedir)
 load('overallData.mat')
 
@@ -48,13 +57,19 @@ timeVector = timeVector - 0.2;
 for m = 1:length(mice)
     [rbstats, crstats, daystats, daycrstats] = getrbprops(pretestData,1, rbstats, daystats,...
         crstats, daycrstats, m, mice, timeVector, 0);
+    [rbstats, crstats, daystats, daycrstats] = getrbprops(lastacqData,1.5, rbstats, daystats,...
+        crstats, daycrstats, m, mice, timeVector, 0);
     [rbstats, crstats, daystats, daycrstats] = getrbprops(posttestData,2, rbstats, daystats,...
+        crstats, daycrstats, m, mice, timeVector, 0);
+    [rbstats, crstats, daystats, daycrstats] = getrbprops(lastextData,2.5, rbstats, daystats,...
         crstats, daycrstats, m, mice, timeVector, 0);
     [rbstats, crstats, daystats, daycrstats] = getrbprops(postextData,3, rbstats, daystats,...
         crstats, daycrstats, m, mice, timeVector, 0);
     %plot(daystats.meanRBTr')
 end
 
+
+%% plot the eyelid traces
 % plot for lowest intensity
 pretestidx = daystats.phase == 1 & daystats.laspow==15;
 posttestidx = daystats.phase == 2  & daystats.laspow==15;
@@ -151,8 +166,8 @@ xlim([0.85 max(timeVector)])
 
 % plot crs
 pretestidx = daycrstats.phase == 1;
-posttestidx = daycrstats.phase == 2;
-postextidx = daycrstats.phase == 3;
+posttestidx = daycrstats.phase == 1.5;
+postextidx = daycrstats.phase == 2.5;
 
 subplot(4,3,10)
 plot(timeVector, daycrstats.meantr(pretestidx,:), 'Color', [0.5 0.5 0.5])
@@ -179,8 +194,27 @@ plot(timeVector, nanmean(daycrstats.meantr(postextidx,:)), 'Color', [0 0 0],...
 ylim([0 1])
 xlim([0 0.6105])
 
-%% NOTE: the CR stuff shown here is not quite what you would want to see
-% (no cs trials on any of the test days for the majority of the mice [the
-% pilot mice have cs trials on the posttraining test day]_
-%       clean data from the days immediately preceding the test days and
-%       then get the crs from there
+%% plot relationship between CR and RB amplitudes across mice
+rbidx = daystats.phase == 2  & daystats.laspow==60;
+cridx = daycrstats.phase == 1.5;
+cridxnums = find(cridx);
+figure
+scatter(daystats.rb.amp(rbidx), daycrstats.amp(cridxnums(5:end)))
+xlim([0 1])
+ylim([0 1])
+% lol it is so flat
+
+%% plot relationship between CR and RB probabilities across mice
+rbidx = daystats.phase == 2  & daystats.laspow==60;
+cridx = daycrstats.phase == 1.5;
+cridxnums = find(cridx);
+figure
+scatter(daystats.rb.prob(rbidx), daycrstats.prob(cridxnums(5:end)))
+xlim([0 1])
+ylim([0 1])
+% lol it is so flat
+
+%% stats
+% RB before vs after training
+preidx = daystats.phase == 1 & daystats.laspow==60;
+postidx = daystats.phase == 2  & daystats.laspow==60;

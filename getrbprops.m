@@ -32,7 +32,16 @@ for c = 1:length(cstrials)
     else
         stable(c,1) = 0;
     end
-    cramps(c,1) = mean(inputData.eyelidpos(cstrials(c),crwinstart:crwinend))-baselines(c,1);
+    cramps(c,1) = max(inputData.eyelidpos(cstrials(c),crwinstart:crwinend))-baselines(c,1);
+%     figure
+%     plot(inputData.eyelidpos(cstrials(c),:))
+%     hold on
+%     plot([0 200], [baselines(c,1) baselines(c,1)])
+%     plot([0 200], [cramps(c,1)+baselines(c,1) cramps(c,1)+baselines(c,1)])
+%     plot([crwinstart crwinstart], [0 1])
+%     plot([crwinend crwinend], [0 1])
+%     pause
+%     close all
 end
 
 alltraces = inputData.eyelidpos(cstrials,:);
@@ -154,7 +163,7 @@ for I = 1:length(lasints)
     addlasamps = ones(length(rbamps),1)*lasints(I);
     addlaspows = nan(length(rbamps),1);
     laspow = nan;
-    if length(lasints)==3
+    if length(lasints)>=3
         switch I
             case 1
                 addlaspows = ones(length(rbamps),1)*15;
@@ -165,6 +174,9 @@ for I = 1:length(lasints)
             case 3
                 addlaspows = ones(length(rbamps),1)*60;
                 laspow = 60;
+            case 4
+                addlaspows = ones(length(rbamps),1)*70;
+                laspow = 70;
         end
     end
     
