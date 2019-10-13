@@ -4,8 +4,8 @@
 clear all
 close all
 
-machine = 'COMPUPITAR';
-%machine = 'OREK';
+%machine = 'COMPUPITAR';
+machine = 'OREK';
 
 if strcmpi(machine, 'OREK')
     basedir = 'E:\pcp2ChR2 data\rebound';
