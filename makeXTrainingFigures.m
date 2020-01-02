@@ -41,6 +41,15 @@ clear temp temp2
 % find animals
 mice = unique(xtraindata.mouse);
 
+training.cr.amps = nan(3,16);
+training.cr.probs = nan(3,16);
+training.rb.amps = nan(3,16);
+training.rb.probs = nan(3,16);
+extinction.cr.amps = nan(3,10);
+extinction.cr.probs = nan(3,10);
+extinction.rb.amps = nan(3,10);
+extinction.rb.probs = nan(3,10);
+
 % cycle through animals and get all relevant data
 for m = 1:length(mice)
     mouseidx = find(xtraindata.mouse == mice(m,1));
@@ -181,16 +190,16 @@ for m = 1:length(mice)
     
     
     if m == 2
-        figure
-        for t = 4634:-1:1400
-            plot(timeVector, xtraindata.eyelidpos(mouseidx(t),:))
-            title([num2str(xtraindata.csdur(mouseidx(t),1)), ' ', num2str(xtraindata.lasdur(mouseidx(t),1))])
-            hold on
-            text(0.7, 0.9, num2str(t))
-            ylim([0 1])
-            pause
-            hold off
-        end
+%         figure
+%         for t = 4634:-1:1400
+%             plot(timeVector, xtraindata.eyelidpos(mouseidx(t),:))
+%             title([num2str(xtraindata.csdur(mouseidx(t),1)), ' ', num2str(xtraindata.lasdur(mouseidx(t),1))])
+%             hold on
+%             text(0.7, 0.9, num2str(t))
+%             ylim([0 1])
+%             pause
+%             hold off
+%         end
         
         % early laser no rebound
         figure
@@ -258,4 +267,108 @@ for m = 1:length(mice)
         
         
     end
+    
+    temptrain = find(trainidx);
+    tempext = find(extidx);
+    training.cr.amps(m,1:8) = daily.cradjamp(temptrain(1:8),1);
+    training.cr.amps(m,9:16) = daily.cradjamp(temptrain(end-7:end),1);
+    training.cr.probs(m,1:8) = daily.crprob(temptrain(1:8),1);
+    training.cr.probs(m,9:16) = daily.crprob(temptrain(end-7:end),1);
+    training.rb.amps(m,1:8) = daily.rbadjamp(temptrain(1:8),1);
+    training.rb.amps(m,9:16) = daily.rbadjamp(temptrain(end-7:end),1);
+    training.rb.probs(m,1:8) = daily.rbprob(temptrain(1:8),1);
+    training.rb.probs(m,9:16) = daily.rbprob(temptrain(end-7:end),1);
+    extinction.cr.amps(m,1:10) = daily.cradjamp(tempext,1);
+    extinction.cr.probs(m,1:10) = daily.crprob(tempext,1);
+    extinction.rb.amps(m,1:10) = daily.rbadjamp(tempext,1);
+    extinction.rb.probs(m,1:10) = daily.rbprob(tempext,1);
+%     mice(m,1)
+%     sum(trainidx)
+%     sum(extidx)
 end
+
+
+groupCRAmpsTrain = mean(training.cr.amps);
+groupCRProbsTrain = mean(training.cr.probs);
+groupRBAmpsTrain = mean(training.rb.amps);
+groupRBProbsTrain = mean(training.rb.probs);
+groupCRAmpsExt = mean(extinction.cr.amps);
+groupCRProbsExt = mean(extinction.cr.probs);
+groupRBAmpsExt = mean(extinction.rb.amps);
+groupRBProbsExt = mean(extinction.rb.probs);
+
+groupCRAmpsTrainSEM = std(training.cr.amps)./sqrt(3);
+groupCRProbsTrainSEM = std(training.cr.probs)./sqrt(3);
+groupRBAmpsTrainSEM = std(training.rb.amps)./sqrt(3);
+groupRBProbsTrainSEM = std(training.rb.probs)./sqrt(3);
+groupCRAmpsExtSEM = std(extinction.cr.amps)./sqrt(3);
+groupCRProbsExtSEM = std(extinction.cr.probs)./sqrt(3);
+groupRBAmpsExtSEM = std(extinction.rb.amps)./sqrt(3);
+groupRBProbsExtSEM = std(extinction.rb.probs)./sqrt(3);
+
+
+figure
+scatter(groupCRProbsTrain, groupRBProbsTrain)
+hold on
+text(0.6, 0.1, ['training r = ', num2str(corr(groupCRProbsTrain', groupRBProbsTrain', 'type', 'Spearman'))]) 
+scatter(groupCRProbsExt, groupRBProbsExt)
+text(0.6, 0.05, ['extinction r = ', num2str(corr(groupCRProbsExt', groupRBProbsExt', 'type', 'Spearman'))]) 
+lsline
+plot([0 1], [0 1])
+
+
+
+figure
+scatter(1:length(groupCRAmpsTrain), groupCRAmpsTrain)
+hold on
+scatter(1:length(groupCRAmpsTrain), groupRBAmpsTrain)
+scatter(1+length(groupCRAmpsTrain):length(groupCRAmpsTrain)+length(groupCRAmpsExt), groupCRAmpsExt)
+scatter(1+length(groupCRAmpsTrain):length(groupCRAmpsTrain)+length(groupCRAmpsExt), groupRBAmpsExt)
+legend('CR training', 'RB training', 'CR extinction', 'RB extinction', 'Location', 'SouthOutside')
+xlim([0 length(groupCRAmpsTrain)+length(groupCRAmpsExt)+1])
+ylim([0 0.55])
+ylabel('Amplitude (FEC)')
+xlabel('Session')
+title('group RB and CR amplitudes across training and extinction')
+
+figure
+scatter(1:length(groupCRProbsTrain), groupCRProbsTrain)
+hold on
+scatter(1:length(groupCRProbsTrain), groupRBProbsTrain)
+scatter(1+length(groupCRProbsTrain):length(groupCRProbsTrain)+length(groupCRProbsExt), groupCRProbsExt)
+scatter(1+length(groupCRProbsTrain):length(groupCRProbsTrain)+length(groupCRProbsExt), groupRBProbsExt)
+legend('CR training', 'RB training', 'CR extinction', 'RB extinction', 'Location', 'SouthOutside')
+xlim([0 length(groupCRProbsTrain)+length(groupCRProbsExt)+1])
+ylim([0 1])
+ylabel('Probability')
+xlabel('Session')
+title('group RB and CR probabilities across training and extinction')
+
+
+figure
+x = 1:26;
+x = x';
+y = [groupCRAmpsTrain, groupCRAmpsExt]';
+err = [groupCRAmpsTrainSEM, groupCRAmpsExtSEM]';
+shadedErrorBar(x,y,err,'-b', 1)
+hold on
+x = 1:26;
+x = x';
+y = [groupRBAmpsTrain, groupRBAmpsExt]';
+err = [groupRBAmpsTrainSEM, groupRBAmpsExtSEM]';
+shadedErrorBar(x,y,err,'-r', 1)
+ylabel('amplitude')
+
+figure
+x = 1:26;
+x = x';
+y = [groupCRProbsTrain, groupCRProbsExt]';
+err = [groupCRProbsTrainSEM, groupCRProbsExtSEM]';
+shadedErrorBar(x,y,err,'-b', 1)
+hold on
+x = 1:26;
+x = x';
+y = [groupRBProbsTrain, groupRBProbsExt]';
+err = [groupRBProbsTrainSEM, groupRBProbsExtSEM]';
+shadedErrorBar(x,y,err,'-r', 1)
+ylabel('probability')

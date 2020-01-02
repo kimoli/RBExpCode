@@ -193,18 +193,31 @@ for I = 1:length(lasints)
     daystats.mouse = [daystats.mouse; mice(m,1)];
     daystats.phase = [daystats.phase; phasenum];
     daystats.rb.amp = [daystats.rb.amp; mean(rbamps)];
+    daystats.rb.hitamp = [daystats.rb.hitamp; mean(rbamps(rbamps>0.1))];
     daystats.rb.lat = [daystats.rb.lat; nanmean(rblats)];
     daystats.rb.prob = [daystats.rb.prob; rbprob];
     daystats.lasamp = [daystats.lasamp; lasints(I)];
     daystats.laspow = [daystats.laspow; laspow];
     if size(theseData,1)==1
         %theseData= theseData-bls;
-        daystats.meanRBTr = [daystats.meanRBTr; theseData];
+        daystats.meanRBTr = [daystats.meanRBTrHit; theseData];
+        if rbamps>0.1
+            daystats.meanRBTrHit = [daystats.meanRBTrHit; theseData];
+        else
+            daystats.meanRBTrHit = [daystats.meanRBTrHit; nan(1,size(theseData,2))];
+        end
     else
 %         for b = 1:length(bls)
 %             theseData(b,:) = theseData(b,:)-bls(b,1);
 %         end
         daystats.meanRBTr = [daystats.meanRBTr; mean(theseData)];
+        if sum(rbamps>=0.1)==1
+            daystats.meanRBTrHit = [daystats.meanRBTrHit; theseData(rbamps>=0.1,:)];
+        elseif sum(rbamps>=0.1)>1
+            daystats.meanRBTrHit = [daystats.meanRBTrHit; mean(theseData(rbamps>=0.1,:))];
+        else
+            daystats.meanRBTrHit = [daystats.meanRBTrHit; nan(1,size(theseData,2))];
+        end
     end
     daystats.winstart = [daystats.winstart; rbwinstart(1)];
     

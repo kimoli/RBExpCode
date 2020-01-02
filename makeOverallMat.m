@@ -17,18 +17,18 @@ else
 end
 cd(basedir)
 [num, txt, raw] = xlsread('prePostDays.xlsx');
-xlsdata = raw(1:37,1:4);
+xlsdata = raw(1:53,1:4);
 
 mousename = {};
 testInhibIdx = nan(11,1); % 11 total subjects
-pretestIdx = nan(11,1); % same idx for posttraining, just 1 column over
+pretestIdx = nan(19,1); % same idx for posttraining, just 1 column over
 lastacqIdx = nan(7,1);
 postextIdx = nan(7,1); % the first group did not get extinction, remove 4
 iter_testInhib = 1;
 iter_pretest = 1;
 iter_postext = 1;
 iter_lastacq = 1;
-for i = 2:37
+for i = 2:53
     if strcmpi(xlsdata(i,2), 'test inhib')
         testInhibIdx(iter_testInhib,1) = i;
         mousename = [mousename; xlsdata{i,1}];
@@ -64,5 +64,5 @@ elseif strcmpi(machine, 'COMPUPITAR')
     savedir = 'D:\pcp2ChR2 data\rebound';
 end
 cd(savedir)
-save('overallData.mat', 'testInhibData', 'pretestData', 'posttestData', ...
+save('overallData_191219.mat', 'testInhibData', 'pretestData', 'posttestData', ...
     'postextData', 'lastacqData', 'lastextData')
