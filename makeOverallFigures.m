@@ -95,7 +95,28 @@ ylim([0 1])
 xlim([0.5 3.5])
 legend('Pre-Test','Pre-Test','Post-Test','Post-Test', 'Location', 'NorthWest')
 
-[prevals, postvals, premad, postmad]=makePlots_RBxPower(daystats, daystats.rb.prob, [15,30,60], [211,213,214,215,216,217,218], 1);
+figure
+quants30 = quantile(postvals(:,2),3);
+quants60 = quantile(postvals(:,3),3);
+plot([0.75 1.25], [quants30(2) quants30(2)], 'Color', [0 0 1])
+hold on
+plot([0.75 1.25], [quants30(1) quants30(1)], 'Color', [0 1 1])
+plot([0.75 1.25], [quants30(3) quants30(3)], 'Color', [0 1 1])
+plot([1.75 2.25], [quants60(2) quants60(2)], 'Color', [1 0 0])
+plot([1.75 2.25], [quants60(1) quants60(1)], 'Color', [1 0 1])
+plot([1.75 2.25], [quants60(3) quants60(3)], 'Color', [1 0 1])
+for i = 1:7
+    plot([1 2],[postvals(i,2) postvals(i,3)], 'LineStyle', ':', 'Color', [0 0 0])
+end
+scatter(ones(7,1), postvals(:,2), 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[0 0 1])
+scatter(ones(7,1)*2, postvals(:,3), 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[1 0 0])
+ylim([0 1])
+xlim([0.5 2.5])
+xlabel('Laser Power (mW)')
+ylabel('Rebound Amplitude (FEC)')
+
+% for control mice
+[prevals, postvals, premad, postmad]=makePlots_RBxPower(daystats, daystats.rb.prob, [15,30,60], [234,235,236,237,238,239,240,241], 1);
 xlabel('Laser Power (mW)')
 ylabel('Rebound Probability (FEC)')
 ylim([0 1])
@@ -109,9 +130,9 @@ legend('Pre-Test','Pre-Test','Post-Test','Post-Test', 'Location', 'NorthWest')
 % [h, p, ci, stats] = ttest(prevals(:,3),postvals(:,3));
 % 
 
-% compare pre and post regardless of laser power
-checkShapiroWilk = median(prevals,2)-median(postvals,2); % R shapiro.test: W = 0.90486, p-value = 0.3614
-[h,p,ci,stats] = ttest(median(prevals,2),median(postvals,2),'Tail','left');
+% compare pre and post regardless of laser power, for control mice
+checkShapiroWilk = median(prevals,2)-median(postvals,2); % R shapiro.test: W = 0.81042, p-value = 0.03697
+[p,h,stats] = signrank(median(prevals,2),median(postvals,2));
 % plot boxplot
 predata = median(prevals,2);
 postdata = median(postvals,2);
@@ -127,23 +148,13 @@ plot([1.75 2.25], [postquant(1) postquant(1)], 'Color', [1 0 1])
 plot([1.75 2.25], [postquant(3) postquant(3)], 'Color', [1 0 1])
 xlim([0.5 2.5])
 ylim([0 1])
-for i = 1:7
+for i = 1:8
     plot([1 2],[predata(i) postdata(i)], 'LineStyle', ':', 'Color', [0 0 0])
 end
-scatter(ones(7,1), predata, 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[0 0 1])
-scatter(ones(7,1)*2, postdata, 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[1 0 0])
+scatter(ones(8,1), predata, 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[0 0 1])
+scatter(ones(8,1)*2, postdata, 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[1 0 0])
 ylabel('RB probability')
 
-
-% sott of like a post hoc
-checkShapiroWilk = postvals(:,1)-postvals(:,2); % R Shapiro.test: W = 0.91016, p-value = 0.397
-csvwrite('temp.csv',checkShapiroWilk')
-checkShapiroWilk = postvals(:,1)-postvals(:,3); % R Shapiro.test: W = 0.86365, p-value = 0.1632
-checkShapiroWilk = postvals(:,2)-postvals(:,3); % R shapiro.test: W = 0.90785, p-value = 0.3812
-
-[h,p,ci,stats] = ttest(postvals(:,1),postvals(:,2),'Tail','left')
-[h,p,ci,stats] = ttest(postvals(:,1),postvals(:,3),'Tail','left')
-[h,p,ci,stats] = ttest(postvals(:,2),postvals(:,3),'Tail','left')
 
 
 
@@ -151,7 +162,10 @@ checkShapiroWilk = postvals(:,2)-postvals(:,3); % R shapiro.test: W = 0.90785, p
 %% plot the eyelid traces centered on event of interest
 makeEyetraceSubplots(daystats, daycrstats, 211, 218, 'paired',timeVector)
 makeEyetraceSubplots(daystats, daycrstats, 234, 241, 'unpaired',timeVector)
+figure
 makeEyetraceSubplots_collapsed(daystats, daycrstats, 211, 218, 'paired',timeVector)
+figure
+makeEyetraceSubplots_collapsed(daystats, daycrstats, 234, 241, 'unpaired',timeVector)
 
 
 %% plot the eyelid traces centered on event of interest
@@ -417,6 +431,7 @@ lsline
 titlestring = ['Pearsons r = ', num2str(r), '; p = ', num2str(p)];
 title(titlestring)
 
+% plot experimental group animals' performance across training
 CRProbsXDays = [];
 CRAmpsXDays = [];
 for m = 1:length(mice)
@@ -459,13 +474,154 @@ end
 
 colordef white
 figure
-plot(CRProbsXDays', 'Color', [0.5 0.5 0.5])
+errorbar([1:19], nanmedian(CRProbsXDays), mad(CRProbsXDays,1), '.', 'LineStyle', 'none', 'Color', [0 0 0])
 hold on
-plot(nanmedian(CRProbsXDays), 'Color', [0 0 0], 'LineWidth',2)
+errorbar([1:19], nanmedian(CRAmpsXDays), mad(CRAmpsXDays,1), '.', 'LineStyle', 'none', 'Color', [1 0 1])
+xlabel('Sessions')
+ylabel('CR Probability')
 
+%% Get performance data for the control group animals
+basedir = 'E:\pcp2ChR2 data\rebound';
+mice = {'OK234';'OK235';'OK236';'OK237',;'OK238';'OK239';'OK240';'OK241'};
+
+daily.mouse = {};
+daily.crprob = [];
+daily.cradjamp = [];
+daily.cradjampHit = [];
+daily.sesstype = []; % 0 = training, 1 = extinction, 2 = laser, 3 = laser extinction trial
+for m = 1:length(mice)
+    mousedir = [basedir,'\',mice{m,1}];
+    cd(mousedir)
+    
+    days = dir('19*');
+    for d = 1:length(days)
+        
+        daydir = [mousedir,'\',days(d,1).name];
+        cd(daydir)
+        
+        % check if there is a trialdata file present
+        loaded = false;
+        if exist('newTrialdata.mat','file')==2
+            load('newTrialdata.mat')
+            loaded = true;
+        elseif exist('trialdata.mat','file')==2
+            load('trialdata.mat')
+            loaded = true;
+        end
+        
+        if loaded == true
+            % check if this day had CS trials or if it was a laser test day
+            numCSTrials = sum(trials.c_csdur>0);
+            
+            if numCSTrials > 0
+                CSUSidx = find(trials.c_csdur>0 & trials.c_usdur>0);
+                CSOnlyidx = find(trials.c_csdur>0 & trials.c_usdur==0);
+                laserIdx = find(trials.laser.dur>0);               
+                if ~isempty(CSUSidx)
+                    checkidx = CSUSidx;
+                    if length(laserIdx)>length(CSUSidx)                        
+                        daily.sesstype(end+1,1) = 3;
+                    else
+                        daily.sesstype(end+1,1) = 0;
+                    end
+                else
+                    checkidx = CSOnlyidx;
+                    daily.sesstype(end+1,1) = 1;
+                end
+                
+                baseline = nan(length(checkidx),1);
+                cradjamp = nan(length(checkidx),1);
+                stable = nan(length(checkidx),1);
+                %eyeadj = nan(length(checkidx),size(trials.eyelidpos,2));
+                for t = 1:length(checkidx)
+                    baseline(t,1) = mean(trials.eyelidpos(checkidx(t,1),1:40));
+                    stable(t,1) = max(trials.eyelidpos(checkidx(t,1),1:40))<0.3;
+                    cradjamp(t,1) = max(trials.eyelidpos(checkidx(t,1),76:85))-baseline(t,1);
+                    %eyeadj(t,:)=trials.eyelidpos(checkidx(t,1),:)-baseline(t,1);
+                end
+                
+                meancradjamp = median(cradjamp(stable==1,1));
+                meancradjampHit = median(cradjamp(stable==1 & cradjamp>=0.1));
+                crprob = sum(cradjamp(stable==1,1)>=0.1)./sum(stable==1);
+                
+%                 figure
+%                 plot(eyeadj(stable==1,:)')
+%                 hold on
+%                 plot(mean(eyeadj(stable==1,:)),'Color',[0 0 0],'LineWidth',3)
+%                 title(num2str(meancradjamp))
+%                 pause
+                
+                daily.mouse{end+1,1} = mice{m,1};
+                daily.cradjamp(end+1,1) = meancradjamp;
+                daily.cradjampHit(end+1,1) = meancradjampHit;
+                daily.crprob(end+1,1) = crprob;
+                
+                clear trials meancradjamp crprob baseline cradjamp stable CSUSidx...
+                    checkidx CSOnlyidx
+            else
+                daily.mouse{end+1,1} = mice{m,1};
+                daily.sesstype(end+1,1) = 2;
+                daily.cradjamp(end+1,1) = nan;
+                daily.crprob(end+1,1) = nan;
+                daily.cradjampHit(end+1,1) = nan;
+            end
+            
+            clear numCSTrials
+            
+        end
+        
+        clear loaded daydir
+    end
+    
+    clear mousedir
+end
+
+% plot control group animals' performance across training
+CRProbsXDays = [];
+CRAmpsXDays = [];
+for m = 1:length(mice)
+    thisMouse = mice(m,1);
+    idx = [];
+    for i = 1:length(daily.mouse)
+        if strcmpi(thisMouse, daily.mouse{i,1})
+            idx(end+1)=i;
+        end
+    end
+    temp = find(daily.sesstype==2);
+    temp2 = ismember(idx,temp);
+    testidx = idx(temp2);
+    pretestidx = testidx(1);
+    posttestidx = testidx(2);
+    crprobvals = daily.crprob(pretestidx+1:posttestidx-1,1)';
+    crampvals = daily.cradjampHit(pretestidx+1:posttestidx-1,1)';
+    if isempty(CRProbsXDays)
+        CRProbsXDays = crprobvals;
+        CRAmpsXDays = crampvals;
+    elseif size(CRProbsXDays,2) > size(crprobvals,2)
+        while size(CRProbsXDays,2) > size(crprobvals,2)
+            crprobvals = [crprobvals,NaN];
+            crampvals = [crampvals,NaN];
+        end
+        CRProbsXDays = [CRProbsXDays; crprobvals];
+        CRAmpsXDays = [CRAmpsXDays; crampvals];
+    elseif size(CRProbsXDays,2)<size(crprobvals,2)
+        while size(CRProbsXDays,2)<size(crprobvals,2)
+            CRProbsXDays = [CRProbsXDays,nan(size(CRProbsXDays,1),1)];
+            CRAmpsXDays = [CRAmpsXDays,nan(size(CRAmpsXDays,1),1)];
+        end
+        CRProbsXDays = [CRProbsXDays; crprobvals];
+        CRAmpsXDays = [CRAmpsXDays; crampvals];
+    else
+        CRProbsXDays = [CRProbsXDays; crprobvals];
+        CRAmpsXDays = [CRAmpsXDays; crampvals];
+    end
+end
+
+colordef white
 figure
 errorbar([1:19], nanmedian(CRProbsXDays), mad(CRProbsXDays,1), '.', 'LineStyle', 'none', 'Color', [0 0 0])
 hold on
 errorbar([1:19], nanmedian(CRAmpsXDays), mad(CRAmpsXDays,1), '.', 'LineStyle', 'none', 'Color', [1 0 1])
 xlabel('Sessions')
 ylabel('CR Probability')
+ylim([0 1])

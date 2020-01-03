@@ -16,12 +16,12 @@ end
 % 
 % figure
 % subplot(2,numcols,panel(1,1))
-% plot(timeVector, nanmean(daystats.meanRBTr(pretestidx,:)), 'Color', [0 1 1],...
+% plot(timeVector, nanmedian(daystats.meanRBTr(pretestidx,:)), 'Color', [0 1 1],...
 %     'LineWidth', 1)
 % title('pre training')
 % 
 % subplot(2,numcols,panel(1,2))
-% plot(timeVector, nanmean(daystats.meanRBTr(posttestidx,:)), 'Color', [0 1 1],...
+% plot(timeVector, nanmedian(daystats.meanRBTr(posttestidx,:)), 'Color', [0 1 1],...
 %     'LineWidth', 1)
 % title('post training')
 % 
@@ -29,7 +29,7 @@ end
 %     postextidx = daystats.phase == 3  & daystats.laspow==15 & daystats.mouse>=mouseStart & daystats.mouse<=mouseEnd;
 %     
 %     subplot(2,numcols,panel(1,3))
-%     plot(timeVector, nanmean(daystats.meanRBTr(postextidx,:)), 'Color', [0 1 1],...
+%     plot(timeVector, nanmedian(daystats.meanRBTr(postextidx,:)), 'Color', [0 1 1],...
 %         'LineWidth', 1)
 %     title('post extinction')
 % end
@@ -40,12 +40,12 @@ end
 % 
 % subplot(2,numcols,panel(1,1))
 % hold on
-% plot(timeVector, nanmean(daystats.meanRBTr(pretestidx,:)), 'Color', [1 0 0],...
+% plot(timeVector, nanmedian(daystats.meanRBTr(pretestidx,:)), 'Color', [1 0 0],...
 %     'LineWidth', 1)
 % 
 % subplot(2,numcols,panel(1,2))
 % hold on
-% plot(timeVector, nanmean(daystats.meanRBTr(posttestidx,:)), 'Color', [1 0 0],...
+% plot(timeVector, nanmedian(daystats.meanRBTr(posttestidx,:)), 'Color', [1 0 0],...
 %     'LineWidth', 1)
 % 
 % if strcmpi(group,'paired')
@@ -53,7 +53,7 @@ end
 %     
 %     subplot(2,numcols,panel(1,3))
 %     hold on
-%     plot(timeVector, nanmean(daystats.meanRBTr(postextidx,:)), 'Color', [1 0 0],...
+%     plot(timeVector, nanmedian(daystats.meanRBTr(postextidx,:)), 'Color', [1 0 0],...
 %         'LineWidth', 1)
 % end
 % 
@@ -62,18 +62,18 @@ end
 % posttestidx = daystats.phase == 2  & daystats.laspow==60& daystats.mouse>=mouseStart & daystats.mouse<=mouseEnd;
 % 
 % subplot(2,numcols,panel(1,1))
-% plot(timeVector, nanmean(daystats.meanRBTr(pretestidx,:)), 'Color', [0 0 1],...
+% plot(timeVector, nanmedian(daystats.meanRBTr(pretestidx,:)), 'Color', [0 0 1],...
 %     'LineWidth', 1)
 % 
 % subplot(2,numcols,panel(1,2))
-% plot(timeVector, nanmean(daystats.meanRBTr(posttestidx,:)), 'Color', [0 0 1],...
+% plot(timeVector, nanmedian(daystats.meanRBTr(posttestidx,:)), 'Color', [0 0 1],...
 %     'LineWidth', 1)
 % 
 % if strcmpi(group,'paired')
 %     postextidx = daystats.phase == 3  & daystats.laspow==60& daystats.mouse>=mouseStart & daystats.mouse<=mouseEnd;
 %     
 %     subplot(2,numcols,panel(1,3))
-%     plot(timeVector, nanmean(daystats.meanRBTr(postextidx,:)), 'Color', [0 0 1],...
+%     plot(timeVector, nanmedian(daystats.meanRBTr(postextidx,:)), 'Color', [0 0 1],...
 %         'LineWidth', 1)
 % end
 
@@ -85,17 +85,17 @@ while thisMouse <= mouseEnd
     pretestidx = daystats.phase == 1 & daystats.mouse==thisMouse;
     if sum(pretestidx)>0
         posttestidx = daystats.phase == 2 & daystats.mouse==thisMouse;
-        pretestTraces = [pretestTraces; nanmean(daystats.meanRBTr(pretestidx,:))];
-        posttestTraces = [posttestTraces; nanmean(daystats.meanRBTr(posttestidx,:))];
+        pretestTraces = [pretestTraces; nanmedian(daystats.meanRBTr(pretestidx,:))];
+        posttestTraces = [posttestTraces; nanmedian(daystats.meanRBTr(posttestidx,:))];
     end
     thisMouse = thisMouse + 1;
 end
 subplot(2,numcols,panel(1,1))
-shadedErrorBar(timeVector, nanmean(pretestTraces), ...
+shadedErrorBar(timeVector, nanmedian(pretestTraces), ...
     nanstd(pretestTraces)./sqrt(size(pretestTraces,1)),'-k')
 
 subplot(2,numcols,panel(1,2))
-shadedErrorBar(timeVector, nanmean(posttestTraces), ...
+shadedErrorBar(timeVector, nanmedian(posttestTraces), ...
     nanstd(posttestTraces)./sqrt(size(posttestTraces,1)),'-k')
 
 if strcmpi(group,'paired')
@@ -104,12 +104,12 @@ if strcmpi(group,'paired')
     while thisMouse <= mouseEnd
         postextidx = daystats.phase == 3 & daystats.mouse==thisMouse;
         if sum(postextidx)>0
-            postextTraces = [postextTraces; nanmean(daystats.meanRBTr(postextidx,:))];
+            postextTraces = [postextTraces; nanmedian(daystats.meanRBTr(postextidx,:))];
         end
         thisMouse = thisMouse + 1;
     end
     subplot(2,numcols,panel(1,3))
-    shadedErrorBar(timeVector, nanmean(postextTraces), ...
+    shadedErrorBar(timeVector, nanmedian(postextTraces), ...
         nanstd(postextTraces)./sqrt(size(postextTraces,1)),'-k')
 end
 
@@ -121,14 +121,14 @@ while thisMouse <= mouseEnd
     pretestidx = daystats.phase == 1 & daystats.mouse==thisMouse;
     if sum(pretestidx)>0
         posttestidx = daystats.phase == 2 & daystats.mouse==thisMouse;
-        pretestTraces = [pretestTraces; nanmean(daystats.meanRBTrHit(pretestidx,:))];
-        posttestTraces = [posttestTraces; nanmean(daystats.meanRBTrHit(posttestidx,:))];
+        pretestTraces = [pretestTraces; nanmedian(daystats.meanRBTrHit(pretestidx,:))];
+        posttestTraces = [posttestTraces; nanmedian(daystats.meanRBTrHit(posttestidx,:))];
     end
     thisMouse = thisMouse + 1;
 end
 subplot(2,numcols,panel(1,1))
 hold on
-shadedErrorBar(timeVector, nanmean(pretestTraces), ...
+shadedErrorBar(timeVector, nanmedian(pretestTraces), ...
     nanstd(pretestTraces)./sqrt(size(pretestTraces,1)),'-r')
 ylim([0 1])
 xlim([-0.2 1.4])
@@ -136,10 +136,14 @@ ylabel('Eyelid Position (FEC')
 
 subplot(2,numcols,panel(1,2))
 hold on
-shadedErrorBar(timeVector, nanmean(posttestTraces), ...
+shadedErrorBar(timeVector, nanmedian(posttestTraces), ...
     nanstd(posttestTraces)./sqrt(size(posttestTraces,1)),'-r')
 ylim([0 1])
 xlim([-0.2 1.4])
+
+subplot(2,numcols,panel(2,1))
+hold on
+plot(timeVector',posttestTraces')
 
 if strcmpi(group,'paired')
     postextTraces = [];
@@ -147,13 +151,13 @@ if strcmpi(group,'paired')
     while thisMouse <= mouseEnd
         postextidx = daystats.phase == 3 & daystats.mouse==thisMouse;
         if sum(postextidx)>0
-            postextTraces = [postextTraces; nanmean(daystats.meanRBTrHit(postextidx,:))];
+            postextTraces = [postextTraces; nanmedian(daystats.meanRBTrHit(postextidx,:))];
         end
         thisMouse = thisMouse + 1;
     end
     subplot(2,numcols,panel(1,3))
     hold on
-    shadedErrorBar(timeVector, nanmean(postextTraces), ...
+    shadedErrorBar(timeVector, nanmedian(postextTraces), ...
         nanstd(postextTraces)./sqrt(size(postextTraces,1)),'-r')
 end
 ylim([0 1])
@@ -175,14 +179,14 @@ temp = intersect(a,b);
 postextidx = intersect(temp,c);
 
 subplot(2,numcols,panel(2,1))
-plot(timeVector, nanmean(daycrstats.meantr(pretestidx,:)), 'Color', [0 0 0],...
+plot(timeVector, nanmedian(daycrstats.meantr(pretestidx,:)), 'Color', [0 0 0],...
     'LineWidth', 1)
 ylim([0 1])
 xlim([-0.2 1.4])
 ylabel('CS')
 
 subplot(2,numcols,panel(2,2))
-plot(timeVector, nanmean(daycrstats.meantr(posttestidx,:)), 'Color', [0 0 0],...
+plot(timeVector, nanmedian(daycrstats.meantr(posttestidx,:)), 'Color', [0 0 0],...
     'LineWidth', 1)
 ylim([0 1])
 xlim([-0.2 1.4])
@@ -193,7 +197,7 @@ if strcmpi(group,'paired')
     postextidx = intersect(temp,c);
     
     subplot(2,numcols,panel(2,3))
-    plot(timeVector, nanmean(daycrstats.meantr(postextidx,:)), 'Color', [0 0 0],...
+    plot(timeVector, nanmedian(daycrstats.meantr(postextidx,:)), 'Color', [0 0 0],...
         'LineWidth', 1)
     ylim([0 1])
     xlim([-0.2 1.4])
