@@ -1,12 +1,12 @@
-function [prevals, postvals, premad, postmad]=makePlots_RBxPower(daystats, datafield, powers, mice, makefig)
+function [prevals, postvals, premad, postmad]=makePlots_RBxPower(daystats, datafield, powers, mice, makefig, prephase, postphase)
 
 prevals = nan(length(mice),length(powers));
 postvals = nan(length(mice),length(powers));
 for p = 1:length(powers)
     for m = 1:length(mice)
-        preidx = find(daystats.phase == 1 & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % pretest
+        preidx = find(daystats.phase == prephase & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % pretest
         prevals(m,p) = mean(datafield(preidx));
-        postidx = find(daystats.phase == 2 & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % post training
+        postidx = find(daystats.phase == postphase & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % post training
         postvals(m,p) = mean(datafield(postidx));
     end
 end
