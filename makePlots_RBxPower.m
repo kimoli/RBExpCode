@@ -5,9 +5,9 @@ postvals = nan(length(mice),length(powers));
 for p = 1:length(powers)
     for m = 1:length(mice)
         preidx = find(daystats.phase == prephase & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % pretest
-        prevals(m,p) = mean(datafield(preidx));
+        prevals(m,p) = nanmean(datafield(preidx));
         postidx = find(daystats.phase == postphase & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % post training
-        postvals(m,p) = mean(datafield(postidx));
+        postvals(m,p) = nanmean(datafield(postidx));
     end
 end
 
@@ -17,14 +17,14 @@ end
 
 premad = mad(prevals,1);
 % MAD Version
-errorbar(1:length(powers), median(prevals), premad,'-b')
+errorbar(1:length(powers), nanmedian(prevals), premad,'-b')
 hold on
-scatter(1:length(powers), median(prevals),10,...
+scatter(1:length(powers), nanmedian(prevals),10,...
     'MarkerEdgeColor', [0 0 1], 'MarkerFaceColor', [0 0 1])
 postmad = mad(postvals,1);
-errorbar(1:length(powers), median(postvals), postmad,'-r')
+errorbar(1:length(powers), nanmedian(postvals), postmad,'-r')
 hold on
-scatter(1:length(powers), median(postvals),10,...
+scatter(1:length(powers), nanmedian(postvals),10,...
     'MarkerEdgeColor', [1 0 0], 'MarkerFaceColor', [1 0 0])
 
 
