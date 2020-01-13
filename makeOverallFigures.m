@@ -258,29 +258,56 @@ end
 bigtable = cell2table(bigcell,'VariableNames',{'phase','mouse','power_mW','RB_prob','RB_amp','RB_hitAmp'});
 writetable(bigtable, 'RBProbs_max_20200108.csv')
 
-% write hit amplitudes from after training and extinction to csv for R
-theseMice = {'OK211';'OK213';'OK214';'OK215';'OK216';'OK217';'OK218'};
-powers = [15;30;60];
-bigcell = cell(14,4); % 7*2 rows (n*phases*powers), 4 columns
-iter = 1;
-for i = 1:7
-    c = idxT(i,1);
-    bigcell{iter,1} = 'post_training';
-    bigcell{iter,2} = theseMice(i,1);
-    bigcell{iter,3} = powers(c,1);
-    bigcell{iter,4} = postTrainHitAmps(i,c);
-    iter = iter+1;
+% make figure 4 panel d: pre vs post for training and extinction
+pretraini = [];
+posttraini = [];
+postunpi = [];
+for i = 1:length(bigtable.phase)
+    if strcmpi('pretest',bigtable.phase{i,1})
+        pretraini = [pretraini;i];
+    elseif strcmpi('post_training',bigtable.phase{i,1})
+        posttraini = [posttraini; i];
+    elseif strcmpi('post_extinction',bigtable.phase{i,1})
+        postunpi = [postunpi; i];
+    end
 end
+prepaired = bigtable.RB_prob(pretraini,1);
+postpaired = bigtable.RB_prob(posttraini,1);
+postunpaired = bigtable.RB_prob(postunpi,1);
+medianVals = [median(prepaired), median(postpaired), median(postunpaired)];
+tempquantPre = quantile(prepaired,3);
+tempquantPost = quantile(postpaired,3);
+tempquantPostE = quantile(postunpaired,3);
+pairedPosErrBars = [tempquantPre(3)-tempquantPre(2), tempquantPost(3)-tempquantPost(2), tempquantPostE(3)-tempquantPostE(2)];
+pairedNegErrBars = [tempquantPre(2)-tempquantPre(1), tempquantPost(2)-tempquantPost(1), tempquantPostE(2)-tempquantPostE(1)];
+figure
+errorbar([1,2,3], medianVals, pairedNegErrBars, pairedPosErrBars, 'Color', [0 0 0])
+hold on
+scatter([1,2,3],medianVals,10,'MarkerFaceColor',[0 0 0],'MarkerEdgeColor',[0 0 0])
+xlim([0.5 3.5])
+ylabel('RB Probability')
+
+% make boxplot for the amplitudes
+postpaired = bigtable.RB_hitAmp(posttraini,1);
+postunpaired = bigtable.RB_hitAmp(postunpi,1);
+tempquantPost = quantile(postpaired,3);
+tempquantPostE = quantile(postunpaired,3);
+figure
+plot([0.75 1.25], [median(postpaired) median(postpaired)], 'Color', [0 0 0])
+hold on
+plot([0.75 1.25], [tempquantPost(3) tempquantPost(3)], 'Color', [0.5 0.5 0.5])
+plot([0.75 1.25], [tempquantPost(1) tempquantPost(1)], 'Color', [0.5 0.5 0.5])
+plot([1.75 2.25], [nanmedian(postunpaired) nanmedian(postunpaired)], 'Color', [1 0 0])
+plot([1.75 2.25], [tempquantPostE(3) tempquantPostE(3)], 'Color', [1 0 1])
+plot([1.75 2.25], [tempquantPostE(1) tempquantPostE(1)], 'Color', [1 0 1])
 for i = 1:7
-    c = idxT(i,1);
-    bigcell{iter,1} = 'post_extinction';
-    bigcell{iter,2} = theseMice(i,1);
-    bigcell{iter,3} = powers(c,1);
-    bigcell{iter,4} = postExtHitAmps(i,c);
-    iter = iter+1;
+    if ~isnan(postunpaired(i,1))
+        plot([1 2], [postpaired(i) postunpaired(i)], 'Color', [0 0 1], 'LineStyle', ':')
+    end
 end
-bigtable = cell2table(bigcell,'VariableNames',{'phase','mouse','power_mW','RB_hitAmp'});
-writetable(bigtable, 'RBHitAmps_max_20200108.csv')
+scatter(ones(7,1), postpaired, 10, 'MarkerFaceColor', [0 0 0], 'MarkerEdgeColor', [0 0 0])
+scatter(ones(7,1)*2, postunpaired, 10, 'MarkerFaceColor', [1 0 0], 'MarkerEdgeColor', [1 0 0])
+ylabel('Rebound Amplitude (FEC)')
 
 % for control mice
 [preunpprob, postunpprob, preunpmad, postunpmad]=makePlots_RBxPower(daystats, daystats.rb.prob, [15,30,60], [234,235,236,237,238,239,240,241], 1, 1, 2);
@@ -340,27 +367,287 @@ end
 bigtable = cell2table(bigcell,'VariableNames',{'phase','mouse','power_mW','RB_prob'});
 writetable(bigtable, 'RBProbs_expVsCont_forFig2_20200108.csv')
 
-% plot boxplot
-predata = median(preunpprob,2);
-postdata = median(postunpprob,2);
-prequant = quantile(predata,3);
-postquant = quantile(postdata,3);
-figure
-plot([0.75 1.25], [prequant(2) prequant(2)], 'Color', [0 0 1])
-hold on
-plot([0.75, 1.25], [prequant(1) prequant(1)], 'Color', [0 1 1])
-plot([0.75, 1.25], [prequant(3) prequant(3)], 'Color', [0 1 1])
-plot([1.75 2.25], [postquant(2) postquant(2)], 'Color', [1 0 0])
-plot([1.75 2.25], [postquant(1) postquant(1)], 'Color', [1 0 1])
-plot([1.75 2.25], [postquant(3) postquant(3)], 'Color', [1 0 1])
-xlim([0.5 2.5])
-ylim([0 1])
-for i = 1:8
-    plot([1 2],[predata(i) postdata(i)], 'LineStyle', ':', 'Color', [0 0 0])
+% make figure 3 panel c: pre vs post for paired and unpaired training
+% find different phase indices
+pretraini = [];
+posttraini = [];
+preunpi = [];
+postunpi = [];
+for i = 1:length(bigtable.phase)
+    if strcmpi('pre_training',bigtable.phase{i,1})
+        pretraini = [pretraini;i];
+    elseif strcmpi('post_training',bigtable.phase{i,1})
+        posttraini = [posttraini; i];
+    elseif strcmpi('pre_unpaired',bigtable.phase{i,1})
+        preunpi = [preunpi; i];
+    elseif strcmpi('post_unpaired',bigtable.phase{i,1})
+        postunpi = [postunpi; i];
+    end
 end
-scatter(ones(8,1), predata, 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[0 0 1])
-scatter(ones(8,1)*2, postdata, 10, 'MarkerFaceColor', [1 1 1], 'MarkerEdgeColor',[1 0 0])
-ylabel('RB probability')
+prepaired = bigtable.RB_prob(pretraini,1);
+postpaired = bigtable.RB_prob(posttraini,1);
+preunpaired = bigtable.RB_prob(preunpi,1);
+postunpaired = bigtable.RB_prob(postunpi,1);
+pairedVals = [median(prepaired), median(postpaired)];
+tempquantPre = quantile(prepaired,3);
+tempquantPost = quantile(postpaired,3);
+pairedPosErrBars = [tempquantPre(3)-tempquantPre(2), tempquantPost(3)-tempquantPost(2)];
+pairedNegErrBars = [tempquantPre(2)-tempquantPre(1), tempquantPost(2)-tempquantPost(1)];
+unpairedVals = [median(preunpaired), median(postunpaired)];
+tempquantPre = quantile(preunpaired,3);
+tempquantPost = quantile(postunpaired,3);
+unpairedPosErrBars = [tempquantPre(3)-tempquantPre(2), tempquantPost(3)-tempquantPost(2)];
+unpairedNegErrBars = [tempquantPre(2)-tempquantPre(1), tempquantPost(2)-tempquantPost(1)];
+figure
+errorbar([1,2], pairedVals, pairedNegErrBars, pairedPosErrBars, 'Color', [0 0 0])
+hold on
+scatter([1,2],pairedVals,10,'MarkerFaceColor',[0 0 0],'MarkerEdgeColor',[0 0 0])
+errorbar([1,2], unpairedVals,  unpairedNegErrBars, unpairedPosErrBars, 'Color', [1 0 0])
+scatter([1,2],unpairedVals,10,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0])
+xlim([0.5 2.5])
+ylabel('RB Probability')
+
+% plot the average pre and post eyelid traces for the compared
+% intensities/times
+theseMice = [211;213;214;215;216;217;218];
+pretrain_RBTr = [];
+pretrain_RBTrHit = [];
+posttrain_RBTr = [];
+posttrain_RBTrHit = [];
+for m = 1:length(theseMice)
+    arrayidx = daystats.mouse==theseMice(m,1);
+    temppows = daystats.laspow(arrayidx);
+    tempphases = daystats.phase(arrayidx);
+    temptracesHit = daystats.meanRBTrHit(arrayidx,:);
+    temptracesAll = daystats.meanRBTr(arrayidx,:);
+    
+    if idxT(m,1)==3
+        thisPow = 60;
+    elseif idxT(m,1)==2
+        thisPow = 30;
+    elseif idxT(m,1)==2
+        thisPow = 15;
+    end
+    
+    % get pre traces
+    preidx = tempphases==1 & temppows == thisPow;
+    pretrain_RBTr = [pretrain_RBTr; temptracesAll(preidx,:)];
+    pretrain_RBTrHit = [pretrain_RBTrHit; temptracesHit(preidx,:)];
+    
+    % get post traces
+    postidx = tempphases==2 & temppows==thisPow;
+    posttrain_RBTr = [posttrain_RBTr; temptracesAll(postidx,:)];
+    posttrain_RBTrHit = [posttrain_RBTrHit; temptracesHit(postidx,:)];
+    
+    clear thisPow
+end
+figure
+shadedErrorBar(timeVector, median(posttrain_RBTr), mad(posttrain_RBTr,1))
+hold on
+shadedErrorBar(timeVector, median(pretrain_RBTr), mad(pretrain_RBTr,1),'-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
+
+% plot the average pre and post eyelid traces for the compared
+% intensities/times
+theseMice = [211;213;214;215;216;217;218];
+postext_RBTrHit = [];
+posttrain_RBTrHit = [];
+for m = 1:length(theseMice)
+    arrayidx = daystats.mouse==theseMice(m,1);
+    temppows = daystats.laspow(arrayidx);
+    tempphases = daystats.phase(arrayidx);
+    temptracesHit = daystats.meanRBTrHit(arrayidx,:);
+    temptracesAll = daystats.meanRBTr(arrayidx,:);
+    
+    if idxT(m,1)==3
+        thisPow = 60;
+    elseif idxT(m,1)==2
+        thisPow = 30;
+    elseif idxT(m,1)==2
+        thisPow = 15;
+    end
+        
+    % get post traces
+    postTidx = tempphases==2 & temppows==thisPow;
+    posttrain_RBTrHit = [posttrain_RBTrHit; temptracesHit(postTidx,:)];
+    postEidx = tempphases==3 & temppows==thisPow;
+    postext_RBTrHit = [postext_RBTrHit; temptracesHit(postEidx,:)];
+    
+    clear thisPow
+end
+figure
+shadedErrorBar(timeVector, nanmean(posttrain_RBTrHit), mad(posttrain_RBTrHit,1))
+hold on
+shadedErrorBar(timeVector, nanmean(postext_RBTrHit), mad(postext_RBTrHit,1), '-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
+
+% now for controls
+theseMice = [234;235;236;237;238;239;240;241];
+pretrain_RBTr = [];
+pretrain_RBTrHit = [];
+posttrain_RBTr = [];
+posttrain_RBTrHit = [];
+for m = 1:length(theseMice)
+    arrayidx = daystats.mouse==theseMice(m,1);
+    temppows = daystats.laspow(arrayidx);
+    tempphases = daystats.phase(arrayidx);
+    temptracesHit = daystats.meanRBTrHit(arrayidx,:);
+    temptracesAll = daystats.meanRBTr(arrayidx,:);
+    
+    if idxT_cont(m,1)==3
+        thisPow = 60;
+    elseif idxT_cont(m,1)==2
+        thisPow = 30;
+    elseif idxT_cont(m,1)==1
+        thisPow = 15;
+    end
+    
+    % get pre traces
+    preidx = tempphases==1 & temppows == thisPow;
+    pretrain_RBTr = [pretrain_RBTr; temptracesAll(preidx,:)];
+    pretrain_RBTrHit = [pretrain_RBTrHit; temptracesHit(preidx,:)];
+    
+    % get post traces
+    postidx = tempphases==2 & temppows==thisPow;
+    posttrain_RBTr = [posttrain_RBTr; temptracesAll(postidx,:)];
+    posttrain_RBTrHit = [posttrain_RBTrHit; temptracesHit(postidx,:)];
+    
+    clear thisPow
+end
+figure
+shadedErrorBar(timeVector, median(posttrain_RBTr), mad(posttrain_RBTr,1))
+hold on
+shadedErrorBar(timeVector, median(pretrain_RBTr), mad(pretrain_RBTr,1),'-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
+
+% and now for only successful rebounds at 30 and 60 mw post training
+theseMice = [211;213;214;215;216;217;218];
+RBTrHit30 = [];
+RBTrHit60 = [];
+for m = 1:length(theseMice)
+    arrayidx = daystats.mouse==theseMice(m,1);
+    temppows = daystats.laspow(arrayidx);
+    tempphases = daystats.phase(arrayidx);
+    temptracesHit = daystats.meanRBTrHit(arrayidx,:);
+    temptracesAll = daystats.meanRBTr(arrayidx,:);
+    
+    % get pre traces
+    idx30 = tempphases==2 & temppows == 30;
+    RBTrHit30 = [RBTrHit30; temptracesHit(idx30,:)];
+    
+    % get post traces
+    idx60 = tempphases==2 & temppows== 60;
+    RBTrHit60 = [RBTrHit60; temptracesHit(idx60,:)];
+    
+    clear thisPow
+end
+figure
+shadedErrorBar(timeVector, median(RBTrHit60), mad(RBTrHit60,1))
+hold on
+shadedErrorBar(timeVector, median(RBTrHit30), mad(RBTrHit30,1),'-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
+
+
+% plot the average pre and post CRs for training
+theseMice = [211;213;214;215;216;217;218];
+pretrain_Tr = [];
+posttrain_Tr = [];
+for m = 1:length(theseMice)
+    arrayidx = daycrstats.mouse==theseMice(m,1);
+    tempphases = daycrstats.phase(arrayidx);
+    temptracesAll = daycrstats.meantr(arrayidx,:);
+    
+    % get pre traces
+    goHere = ['E:\pcp2ChR2 data\rebound\OK', num2str(theseMice(m,1))];
+    cd(goHere)
+    folders = dir;
+    goHere = [goHere,'\',folders(4,1).name];
+    cd(goHere)
+    load('trialdata.mat')
+    csusidx = trials.c_csdur>0 & trials.c_usdur>0;
+    thisTrace = mean(trials.eyelidpos(csusidx,:));
+    if size(thisTrace,2)<340
+        addnan = nan(1,340-size(thisTrace,2));
+        thisTrace = [thisTrace, addnan];
+    end
+    pretrain_Tr = [pretrain_Tr; thisTrace];
+    
+    % get post traces
+    postidx = tempphases==1.5;
+    posttrain_Tr = [posttrain_Tr; temptracesAll(postidx,:)];
+    
+    clear thisTrace
+end
+figure
+shadedErrorBar(timeVector, median(pretrain_Tr), mad(pretrain_Tr,1))
+hold on
+shadedErrorBar(timeVector, median(posttrain_Tr), mad(posttrain_Tr,1),'-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
+
+
+% plot the average pre and post CRs for unpairedtraining
+theseMice = [234;235;236;237;238;239;240;241];
+pretrain_Tr = [];
+posttrain_Tr = [];
+for m = 1:length(theseMice)
+    arrayidx = daycrstats.mouse==theseMice(m,1);
+    tempphases = daycrstats.phase(arrayidx);
+    temptracesAll = daycrstats.meantr(arrayidx,:);
+    
+    % get pre traces
+    goHere = ['E:\pcp2ChR2 data\rebound\OK', num2str(theseMice(m,1))];
+    cd(goHere)
+    folders = dir;
+    goHere = [goHere,'\',folders(4,1).name];
+    cd(goHere)
+    try
+        load('newtrialdata.mat')
+    catch ME
+        load('trialdata.mat')
+    end
+    csusidx = trials.c_csdur>0 & trials.c_usdur==0;
+    thisTrace = mean(trials.eyelidpos(csusidx,:));
+    if size(thisTrace,2)<340
+        addnan = nan(1,340-size(thisTrace,2));
+        thisTrace = [thisTrace, addnan];
+    end
+    pretrain_Tr = [pretrain_Tr; thisTrace];
+    
+    % get post traces
+    postidx = tempphases==1.5;
+    posttrain_Tr = [posttrain_Tr; temptracesAll(postidx,:)];
+    
+    clear thisTrace
+end
+figure
+shadedErrorBar(timeVector, median(pretrain_Tr), mad(pretrain_Tr,1))
+hold on
+shadedErrorBar(timeVector, median(posttrain_Tr), mad(posttrain_Tr,1),'-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
 
 % save a csv for comparing rebounds after training in the experimental and
 % the control animals
@@ -399,6 +686,35 @@ end
 bigtable = cell2table(bigcell,'VariableNames',{'phase','mouse','power_mW','RB_prob'});
 writetable(bigtable, 'RBProbs_expCont_20200104.csv')
 
+
+% plot the average pre and post extinction CR traces
+theseMice = [211;213;214;215;216;217;218];
+pretrain_Tr = [];
+posttrain_Tr = [];
+for m = 1:length(theseMice)
+    arrayidx = daycrstats.mouse==theseMice(m,1);
+    tempphases = daycrstats.phase(arrayidx);
+    temptracesAll = daycrstats.meantr(arrayidx,:);
+    
+    % get pre traces
+    preidx = tempphases==1.5;
+    pretrain_Tr = [pretrain_Tr; temptracesAll(preidx,:)];
+    
+    % get post traces
+    postidx = tempphases==2.5;
+    posttrain_Tr = [posttrain_Tr; temptracesAll(postidx,:)];
+    
+    clear thisTrace
+end
+figure
+shadedErrorBar(timeVector, median(pretrain_Tr), mad(pretrain_Tr,1))
+hold on
+shadedErrorBar(timeVector, median(posttrain_Tr), mad(posttrain_Tr,1),'-r')
+plot([0 0],[0 1],'LineStyle',':','Color',[0 0 0])
+plot([0.85 0.85],[0 1], 'LineStyle',':','Color',[0 0 0])
+ylabel('Eyelid Position (FEC')
+xlabel('Time from Laser Onset (s)')
+ylim([0 1])
 
 %% plot the eyelid traces centered on event of interest
 makeEyetraceSubplots(daystats, daycrstats, 211, 218, 'paired',timeVector)
