@@ -4,9 +4,9 @@ prevals = nan(length(mice),length(powers));
 postvals = nan(length(mice),length(powers));
 for p = 1:length(powers)
     for m = 1:length(mice)
-        preidx = find(daystats.phase == prephase & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % pretest
+        preidx = find(strcmpi(daystats.phase, prephase) & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % pretest
         prevals(m,p) = nanmean(datafield(preidx));
-        postidx = find(daystats.phase == postphase & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % post training
+        postidx = find(strcmpi(daystats.phase, postphase) & daystats.laspow == powers(p) & daystats.mouse==mice(m)); % post training
         postvals(m,p) = nanmean(datafield(postidx));
     end
 end

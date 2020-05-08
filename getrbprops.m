@@ -1,4 +1,4 @@
-function [rbstats, crstats, daystats, daycrstats] = getrbprops(inputData, phasenum, rbstats,...
+function [rbstats, crstats, daystats, daycrstats] = getrbprops(inputData, phasename, rbstats,...
     daystats, crstats, daycrstats, m, mice, timeVector, checkfigs)
 
 checkidx = inputData.mouse == mice(m,1) & inputData.lasdur>0 &...
@@ -6,7 +6,10 @@ checkidx = inputData.mouse == mice(m,1) & inputData.lasdur>0 &...
 
 % are there multiple laser intensities for this day?
 lasints = unique(inputData.lasamp(checkidx)); % no calibration trial will be included in the data sent to this function, so # unique vals will be the # of laser intensities in the session
-
+% mice(m,1)
+% length(lasints)
+% sum(checkidx)
+% pause
 %% CR stuff
 checkidx = inputData.mouse == mice(m,1) & inputData.lasdur==0 &...
         inputData.csdur > 0;
@@ -47,16 +50,22 @@ end
 alltraces = inputData.eyelidpos(cstrials,:);
 stabletraces = alltraces(stable==1,:);
 meantrace = nanmean(stabletraces);
+if size(meantrace,2)<340
+    addcols = nan(1,340-size(meantrace,2));
+    meantrace = [meantrace,addcols];
+end
 
 %% update output variables with CR information
+
 addmice = ones(length(cramps),1)*mice(m,1);
-addphase = ones(length(cramps),1)*phasenum;
 crstats.mouse = [crstats.mouse; addmice];
+addphase = cell(length(cramps),1);
+[addphase{1:end}]=deal(phasename);
 crstats.phase = [crstats.phase;addphase];
 crstats.amp = [crstats.amp;cramps];
 
 daycrstats.mouse = [daycrstats.mouse; mice(m,1)];
-daycrstats.phase = [daycrstats.phase; phasenum];
+daycrstats.phase = [daycrstats.phase; phasename];
 daycrstats.amp = [daycrstats.amp; mean(cramps(stable==1,1))];
 daycrstats.prob = [daycrstats.prob;sum(cramps(stable==1,1)>=0.1)./sum(stable)];
 daycrstats.meantr = [daycrstats.meantr; meantrace];
@@ -159,10 +168,12 @@ for I = 1:length(lasints)
     %% update the output variables
 
     addmice = ones(length(rbamps),1)*mice(m,1);
-    addphase = ones(length(rbamps),1)*phasenum;
+    addphase = cell(length(rbamps),1);
+    [addphase{1:end}]=deal(phasename);
     addlasamps = ones(length(rbamps),1)*lasints(I);
     addlaspows = nan(length(rbamps),1);
     laspow = nan;
+    %mice(m,1)
     if length(lasints)>=3
         switch I
             case 1
@@ -191,7 +202,7 @@ for I = 1:length(lasints)
     clear addmice addphase addlasamps addlaspows
     
     daystats.mouse = [daystats.mouse; mice(m,1)];
-    daystats.phase = [daystats.phase; phasenum];
+    daystats.phase = [daystats.phase; phasename];
     daystats.rb.amp = [daystats.rb.amp; mean(rbamps)];
     daystats.rb.hitamp = [daystats.rb.hitamp; mean(rbamps(rbamps>0.1))];
     daystats.rb.lat = [daystats.rb.lat; nanmean(rblats)];
