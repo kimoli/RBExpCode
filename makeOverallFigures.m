@@ -270,7 +270,7 @@ scatter(ones(14,1)*2, trainprobs(:,2), 10, 'MarkerFaceColor', [1 1 1], 'MarkerEd
 ylabel('RB probability at 30 mW')
 
 
-
+pause
 
 %% STOPPED CHECKING THINGS HERE
 

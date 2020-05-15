@@ -163,7 +163,7 @@ for m = 1:length(mice)
     legend('cr', 'rb')
     ylabel('Probability')
     ylim([0 1])
-    
+    pause
     
     trainidx = daily.sesstype==1;
     extidx = daily.sesstype==2;
@@ -201,86 +201,6 @@ for m = 1:length(mice)
     scatter(nanmedian(daily.crprob(trainidx)),nanmean(daily.rbprob(trainidx)),'MarkerFaceColor',[0 0 1],'MarkerEdgeColor',[0 0 1])
     scatter(nanmedian(daily.crprob(extidx)),nanmean(daily.rbprob(extidx)),'MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[1 0 0])
     plot([0 1], [0 1])
-    
-    
-%     if m == 2
-% %         figure
-% %         for t = 4634:-1:1400
-% %             plot(timeVector, xtraindata.eyelidpos(mouseidx(t),:))
-% %             title([num2str(xtraindata.csdur(mouseidx(t),1)), ' ', num2str(xtraindata.lasdur(mouseidx(t),1))])
-% %             hold on
-% %             text(0.7, 0.9, num2str(t))
-% %             ylim([0 1])
-% %             pause
-% %             hold off
-% %         end
-%         
-%         % early laser no rebound
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(83),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         plot([0.85 0.85], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         ylim([0 1])
-%         
-%         % early cs no cr
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(73),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         plot([0.21 0.21], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         ylim([0 1])
-%         
-%         % middle CR with CR
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(1035),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         plot([0.21 0.21], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         ylim([0 1])
-%         
-%         % middle laser with RB
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(1037),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         plot([0.85 0.85], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         ylim([0 1])
-%         
-%         % late CS with CR
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(1200),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         plot([0.21 0.21], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         ylim([0 1])
-%         
-%         % late laser with RB
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(1381),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         plot([0.85 0.85], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         ylim([0 1])
-%         
-%         % ext CS without CR
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(4443),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         plot([0.21 0.21], [0 1], 'LineStyle', '--', 'Color', [1 0 0])
-%         ylim([0 1])
-%         
-%         % ext laser with RB
-%         figure
-%         plot(timeVector, xtraindata.eyelidpos(mouseidx(4493),:))
-%         hold on
-%         plot([0 0], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         plot([0.85 0.85], [0 1], 'LineStyle', '--', 'Color', [0 0 1])
-%         ylim([0 1])
-%         
-%         
-%     end
     
     temptrain = find(trainidx);
     tempext = find(extidx);
