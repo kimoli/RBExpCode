@@ -77,7 +77,6 @@ paired.rbamp = [];
 paired.rbprob = [];
 paired.rbtrace = [];
 paired.eyelidposadj = [];
-paired.eyelidposadjHit = [];
 
 unpaired.mouse = {};
 unpaired.session = [];
@@ -87,7 +86,6 @@ unpaired.rbamp = [];
 unpaired.rbprob = [];
 unpaired.rbtrace = [];
 unpaired.eyelidposadj = [];
-unpaired.eyelidposadjHit = [];
 
 extinction.mouse = {};
 extinction.session = [];
@@ -97,7 +95,6 @@ extinction.rbamp = [];
 extinction.rbprob = [];
 extinction.rbtrace = [];
 extinction.eyelidposadj = [];
-extinction.eyelidposadjHit = [];
 
 savings.mouse = {};
 savings.session = [];
@@ -107,7 +104,6 @@ savings.rbamp = [];
 savings.rbprob = [];
 savings.rbtrace = [];
 savings.eyelidposadj = [];
-savings.eyelidposadjHit = [];
 
 rebound.prePaired.mouse = {};
 rebound.prePaired.laserint = [];
@@ -547,7 +543,7 @@ end
 hold on
 plot(timeVector, nanmean(rbtrace.preunpaired)')
 plot(timeVector, nanmean(rbtrace.postunpaired)')
-xlim([0 1.4])
+xlim([0.85 1.4])
 ylim([0 1])
 subplot(3,6,11) % for this one, just plot the RB's at the best intensity 
 rbprob.preunpaired = nan(length(anims),1);
@@ -577,9 +573,6 @@ ylim([0 1])
 ylabel('Rebound Amplitude (FEC)')
 sessionsToShow10Pct_acq = nan(length(extnctionmice), 1);
 sessionsToShow10Pct_sav = nan(length(extnctionmice), 1);
-reachThreshEyepos = nan(length(extnctionmice),440);
-reachThreshEyepos_Sav = nan(length(extnctionmice),440);
-lasteyelidtraceHit = nan(length(extnctionmice),440);
 thresh = [0.6, 0.8, 0.6, 0.6, 0.6, 0.55, 0.6, 0.6, 0.7, 0.5, 0.6, 0.5, 0.6, 0.7];
 for i=1:length(extnctionmice)
 %     figure
@@ -592,26 +585,19 @@ for i=1:length(extnctionmice)
     
     temp = paired.cradjamp(strcmpi(paired.mouse, extnctionmice{i,1}),:)>=thresh(i);
     temp = find(temp);
-    if i==7 || i==10 || i==12 % big startles on first day of training
+    if i==10 || i==12 % big startles on first day of training
         sessionsToShow10Pct_acq(i,1) = temp(2);
-        
-        reachThreshEyepos(i,:) = paired.eyelidposadjHit(temp(2),:);
     else
         sessionsToShow10Pct_acq(i,1) = temp(1);
-        
-        reachThreshEyepos(i,:) = paired.eyelidposadjHit(temp(1),:);
     end
-    temp = strcmpi(paired.mouse, extnctionmice{i,1});
-    temp = find(temp);
-    lasteyelidtraceHit(i,:) = paired.eyelidposadjHit(temp(end),:);
+    
     
     temp = savings.cradjamp(strcmpi(savings.mouse, extnctionmice{i,1}),:)>=thresh(i);
     temp = find(temp);
     sessionsToShow10Pct_sav(i,1) = temp(1);
-    reachThreshEyepos_Sav(i,:) = savings.eyelidposadjHit(temp(1),:);
 end
 savsessions = sessionsToShow10Pct_acq-sessionsToShow10Pct_sav;
-subplot(3,6,[13,14])
+subplot(3,4,[9,10])
 a = scatter(sessionsToShow10Pct_sav, rbprob.postunpaired, 4);
 set(a, 'MarkerFaceColor', [0 0 1], 'MarkerEdgeColor', [0 0 1])
 hold on
@@ -623,7 +609,7 @@ xlim([0.5 10.5])
 ylim([0 1])
 ylabel('RB Prob after Ext')
 xlabel('Sessions to Reacquire')
-subplot(3,6,15)
+subplot(3,4,11)
 hold on
 plotMedianBoxplot(sessionsToShow10Pct_acq, 1, 0.25, [1 0 0])
 plotMedianBoxplot(sessionsToShow10Pct_sav, 2, 0.25, [1 0 0])
@@ -631,16 +617,7 @@ ylabel('Sessions')
 xticks([1,2])
 xticklabels({'Acq','Sav'})
 xlim([0.5 2.5])
-subplot(3,6,[16 17])
-plot(timeVector, nanmean(reachThreshEyepos)')
-hold on
-plot(timeVector, nanmean(reachThreshEyepos_Sav)')
-plot(timeVector, nanmean(lasteyelidtraceHit))
-xlim([0 0.3])
-legend('Reacquired', 'Last Training', 'Location', 'NorthWest')
 
-
-%% Below here is saved junk for exploratory savings analysis
 % how many days until mouse showed > 10% CRs in acquisition
 sessionsToShow10Pct_acq = nan(length(extnctionmice), 1);
 sessionsToShow10Pct_sav = nan(length(extnctionmice), 1);

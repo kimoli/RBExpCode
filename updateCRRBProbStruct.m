@@ -15,7 +15,7 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
             checkidx = find(sessdate==trainingSessions(startidx,1) & trialtype==1);
         end
         if startidx > 1
-            startidx = startidx - 1; % keep one baseline session
+            startidx = startidx - 2; % keep two baseline sessions
         end
     else
         startidx = 1;
@@ -42,8 +42,13 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
             phase.mouse = [phase.mouse; thisMouse];
             phase.session = [phase.session;sessioniter];
             phase.crprob = [phase.crprob;sum(stable==1 & cradjamp>=0.1 & crvel>1)./sum(stable==1)];
-            phase.cradjamp = [phase.cradjamp;nanmean(cradjamp)];
+            phase.cradjamp = [phase.cradjamp;nanmean(cradjamp(stable==1 & cradjamp>=0.1 & crvel>1))];
             phase.eyelidposadj = [phase.eyelidposadj;nanmean(eyelidposadj)];
+            if sum(stable==1 & cradjamp>=0.1 & crvel>1)==1
+                phase.eyelidposadjHit = [phase.eyelidposadjHit;eyelidposadj(stable==1 & cradjamp>=0.1 & crvel>1,:)];
+            else
+                phase.eyelidposadjHit = [phase.eyelidposadjHit;nanmean(eyelidposadj(stable==1 & cradjamp>=0.1 & crvel>1,:))];
+            end
             
             clear baseline cradjamp eyelidposadj stable didx
             
@@ -66,7 +71,7 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
                     rbadjamp(t,1) = max(eyelidpos(didx(t,1),laserOffBin+1:end))-baseline(t,1);
                     rbtrace(t,:) = eyelidpos(didx(t,1),:)-baseline(t,1);
                 end
-                phase.rbamp = [phase.rbamp;nanmean(rbadjamp)];
+                phase.rbamp = [phase.rbamp;nanmean(rbadjamp(rbadjamp>0.1))];
                 phase.rbprob = [phase.rbprob;sum(rbadjamp>0.1)/length(didx)];
                 phase.rbtrace = [phase.rbtrace;nanmean(rbtrace)];
                 clear laserOff laserOn laserOffBin baseline rbadjamp
