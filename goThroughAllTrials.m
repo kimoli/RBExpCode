@@ -73,6 +73,7 @@ paired.mouse = {};
 paired.session = [];
 paired.crprob = [];
 paired.cradjamp = [];
+paired.cradjampTm = [];
 paired.rbamp = [];
 paired.rbprob = [];
 paired.rbtrace = [];
@@ -83,6 +84,7 @@ unpaired.mouse = {};
 unpaired.session = [];
 unpaired.crprob = [];
 unpaired.cradjamp = [];
+unpaired.cradjampTm = [];
 unpaired.rbamp = [];
 unpaired.rbprob = [];
 unpaired.rbtrace = [];
@@ -93,6 +95,7 @@ extinction.mouse = {};
 extinction.session = [];
 extinction.crprob = [];
 extinction.cradjamp = [];
+extinction.cradjampTm = [];
 extinction.rbamp = [];
 extinction.rbprob = [];
 extinction.rbtrace = [];
@@ -103,6 +106,7 @@ savings.mouse = {};
 savings.session = [];
 savings.crprob = [];
 savings.cradjamp = [];
+savings.cradjampTm = [];
 savings.rbamp = [];
 savings.rbprob = [];
 savings.rbtrace = [];
@@ -581,15 +585,7 @@ reachThreshEyepos = nan(length(extnctionmice),440);
 reachThreshEyepos_Sav = nan(length(extnctionmice),440);
 lasteyelidtraceHit = nan(length(extnctionmice),440);
 thresh = [0.6, 0.8, 0.6, 0.6, 0.6, 0.55, 0.6, 0.6, 0.7, 0.5, 0.6, 0.5, 0.6, 0.7];
-for i=1:length(extnctionmice)
-%     figure
-%     plot(paired.cradjamp(strcmpi(paired.mouse, extnctionmice{i,1}),:))
-%     hold on
-%     plot(savings.cradjamp(strcmpi(savings.mouse, extnctionmice{i,1}),:))
-%     pause
-%     close all
-   
-    
+for i=1:length(extnctionmice)    
     temp = paired.cradjamp(strcmpi(paired.mouse, extnctionmice{i,1}),:)>=thresh(i);
     temp = find(temp);
     if i==7 || i==10 || i==12 % big startles on first day of training
@@ -639,6 +635,277 @@ plot(timeVector, nanmean(lasteyelidtraceHit))
 xlim([0 0.3])
 legend('Reacquired', 'Last Training', 'Location', 'NorthWest')
 
+
+sessionsToShow10Pct_ext = nan(length(extnctionmice), 1);
+for i=1:length(extnctionmice)
+    temp = extinction.crprob(strcmpi(extinction.mouse, extnctionmice{i,1}),:)<=0.15;
+    temp = find(temp);
+    sessionsToShow10Pct_ext(i,1) = temp(1);
+end
+figure
+scatter(sessionsToShow10Pct_ext, rbprob.postpaired)
+hold on
+lsline
+xlim([0 11])
+ylim([0 1])
+[r,p]= corr(sessionsToShow10Pct_ext, rbamp.postpaired, 'Type', 'Spearman');
+text(2, 0.8, ['r =',num2str(r)])
+text(2, 0.7, ['p=',num2str(p)])
+xlabel('Sessions to Extinction')
+ylabel('Rebound Probability after Training')
+
+figure
+hold on
+plot(timeVector, extphaseeyelidpos(12,:))
+for s = 1:5
+    plot(timeVector, savphaseeyelidpos(s,:))
+end
+xlim([0 0.3])
+ylim([0 1])
+legend('B','1','2','3','4','5')
+
+
+%% figure illustrating relationship between task acquisition and rebound acquisition
+rbprobs_withinTraining = nan(20,1);
+rbtraces_withinTraining = nan(20,440);
+pairedphaseeyelidposThruTrain = nan(20,440);
+crprobs_withinTraining = nan(20,1);
+rbamps_withinTraining = nan(20,1);
+cramps_withinTraining = nan(20,1);
+rbprobs_extinction = nan(20,1);
+rbamps_extinction = nan(20,1);
+rbtraces_extinction = nan(20,440);
+pairedphaseeyelidposThruExt = nan(20,440);
+crprobs_ext = nan(20,1);
+cramps_ext = nan(20,1);
+for s = 1:20
+    idx = paired.session==s;
+    rbprobs_withinTraining(s,1) = nanmean(paired.rbprob(idx));
+    rbamps_withinTraining(s,1) = nanmean(paired.rbamp(idx));
+    temp = paired.rbtrace(idx,:);
+    rbtraces_withinTraining(s,:) = nanmean(temp(~isnan(paired.rbprob(idx)),:));
+    temp = paired.eyelidposadj(idx,:);
+    pairedphaseeyelidposThruTrain(s,:) = nanmean(temp(~isnan(paired.rbprob(idx)),:));
+    temp = paired.crprob(idx,:);
+    crprobs_withinTraining(s,:) = nanmean(temp(~isnan(paired.rbprob(idx)),:));
+    temp = paired.cradjampTm(idx,:);
+    cramps_withinTraining(s,:) = nanmean(temp(~isnan(paired.rbprob(idx)),:));
+        
+    idx = extinction.session==s;
+    rbprobs_extinction(s,1) = nanmean(extinction.rbprob(idx));
+    rbamps_extinction(s,1) = nanmean(extinction.rbamp(idx));
+    temp = extinction.rbtrace(idx,:);
+    rbtraces_extinction(s,:) = nanmean(temp(~isnan(extinction.rbprob(idx)),:));
+    temp = extinction.eyelidposadj(idx,:);
+    pairedphaseeyelidposThruExt(s,:) = nanmean(temp(~isnan(extinction.rbprob(idx)),:));
+    temp = extinction.crprob(idx,:);
+    crprobs_ext(s,:) = nanmedian(temp(~isnan(extinction.rbprob(idx)),:));
+    temp = extinction.cradjampTm(idx,:);
+    cramps_ext(s,:) = nanmedian(temp(~isnan(extinction.rbprob(idx)),:));
+end
+[r,p]=corr(rbprobs_withinTraining(1:19), crprobs_withinTraining(1:19,1),'Type','Spearman'); % is the right way to do these comparisons to limit the number of days?
+[r,p]=corr(rbamps_withinTraining(1:19), cramps_withinTraining(1:19,1),'Type','Spearman');
+[r,p]=corr(rbprobs_extinction(2:12), crprobs_ext(2:12,1),'Type','Spearman');
+[r,p]=corr(rbamps_extinction(2:12), cramps_ext(2:12,1),'Type','Spearman');
+figure
+subplot(2,4,1)
+a = scatter(crprobs_withinTraining(1:19,1),rbprobs_withinTraining(1:19),  4);
+set(a, 'MarkerFaceColor', [0 0 1], 'MarkerEdgeColor', [0 0 1])
+hold on
+lsline
+xlim([0 1])
+ylim([0 1])
+xlabel('CR Probability')
+ylabel('Rebound Probability')
+title('acquisition')
+subplot(2,4,2)
+a = scatter(rbamps_withinTraining(1:19), cramps_withinTraining(1:19,1), 4);
+set(a, 'MarkerFaceColor', [0 0 1], 'MarkerEdgeColor', [0 0 1])
+hold on
+lsline
+xlim([0 1])
+ylim([0 1])
+xlabel('CR Amplitude')
+ylabel('Rebound Amplitude')
+title('acquisition')
+subplot(2,4,3)
+daysToPlot = [1;5;10;12;17;18;19];
+hold on
+for d = 1:length(daysToPlot)
+    plot(timeVector, pairedphaseeyelidposThruTrain(daysToPlot(d),:))
+end
+xlim([0 0.55])
+ylim([-0.025 1])
+xlabel('Time from Tone (s)')
+ylabel('Eyelid Position (FEC)')
+subplot(2,4,4)
+daysToPlot = [1;5;10;12;17;18;19];
+hold on
+for d = 1:length(daysToPlot)
+    plot(timeVector-0.85, rbtraces_withinTraining(daysToPlot(d),:))
+end
+xlim([0 0.55])
+ylim([-0.025 1])
+xlabel('Time from Tone (s)')
+ylabel('Eyelid position')
+subplot(2,4,5)
+a = scatter(crprobs_ext(2:12,1),rbprobs_extinction(2:12),   4);
+set(a, 'MarkerFaceColor', [0 0 1], 'MarkerEdgeColor', [0 0 1])
+hold on
+lsline
+xlim([0 1])
+ylim([0 1])
+xlabel('CR Probability')
+ylabel('Rebound Probability')
+title('extinction')
+subplot(2,4,6)
+a = scatter(cramps_ext(2:12,1), rbamps_extinction(2:12),  4);
+set(a, 'MarkerFaceColor', [0 0 1], 'MarkerEdgeColor', [0 0 1])
+hold on
+lsline
+xlim([0 1])
+ylim([0 1])
+xlabel('CR Probability')
+ylabel('Rebound Probability')
+title('extinction')
+subplot(2,4,7)
+daysToPlot = [1;3;4;5;8;9;12];
+hold on
+for d = 1:length(daysToPlot)
+    plot(timeVector, pairedphaseeyelidposThruExt(daysToPlot(d),:))
+end
+xlim([0 0.55])
+ylim([-0.025 1])
+xlabel('Time from Tone (s)')
+ylabel('Eyelid Position (FEC)')
+subplot(2,4,8)
+daysToPlot = [1;3;4;5;8;9;12];
+hold on
+for d = 1:length(daysToPlot)
+    plot(timeVector-0.85, rbtraces_extinction(daysToPlot(d),:))
+end
+xlim([0 0.55])
+ylim([-0.025 1])
+xlabel('Time from Tone (s)')
+ylabel('Eyelid position')
+
+
+
+%% plot data for the inhibition test trials
+
+inhibData.CSUStrace = nan(7,440);
+inhibData.CSlaserTrace = nan(7,440);
+for m = 1:length(dates.mouse)
+    inhibSession = dates.testInhibDate(m,1);
+    thisMouse = dates.mouse{m,1};
+    idx = find(strcmpi(data.mouse,thisMouse) & data.date==inhibSession & data.type==1);
+    
+    eyelidpos = data.eyelidpos(idx,:);
+    csdur = data.csdur(idx,:);
+    usdur = data.usdur(idx,:);
+    laserdur = data.laserdur(idx,:);
+    laserdel = data.laserdelay(idx,:);
+    
+    laseridx = laserdur>0;
+    trainingidx = laserdur==0;
+    
+    figure
+    plot(nanmean(eyelidpos(laseridx,:))')
+    hold on
+    plot(nanmean(eyelidpos(trainingidx,:))')
+    xlim([40 90])
+    pause
+
+    if sum(laseridx)>0
+    end
+end
+% I think I want different data for this
+
+% find sessions where I tried to block the CR, 160 ms latency laser and 35
+% ms duration
+inhibTestDirs = {};
+basedir = 'E:\pcp2ChR2 data\rebound';
+cd(basedir)
+mice = dir('OK*');
+for m = 1:length(mice)
+    goHere = [basedir, '\', mice(m,1).name];
+    cd(goHere)
+    days = dir('19*');
+    for d = 1:length(days)
+        daydir = [goHere, '\', days(d,1).name];
+        cd(daydir)
+        if exist('newtrialdata.mat','file')==2
+            load('newtrialdata.mat')
+            checkday = 1;
+        elseif exist('trialdata.mat','file')==2
+            load('trialdata.mat')
+            checkday = 1;
+        else
+            checkday = 0;
+        end
+        if checkday==1
+            laserPlusCS = trials.laser.dur>0 & trials.c_csdur>0 & trials.c_usdur>0;
+            if sum(laserPlusCS)>0
+                trials.laser.delay(laserPlusCS)
+                pause
+                inhibTestDirs = [inhibTestDirs; daydir];
+                break
+            end
+        end
+    end
+end
+
+inhibCR.mouse = cell(4,1);
+inhibCR.inhibTrace = nan(4,200);
+inhibCR.baselineTrace = nan(4,200);
+inhibCR.inhibCRAmp = nan(4,1);
+inhibCR.baselineCRAmp = nan(4,1);
+inhibCR.inhibCRProb = nan(4,1);
+inhibCR.baselineCRProb = nan(4,1);
+
+for i = 1:length(inhibTestDirs)
+    cd(inhibTestDirs{i,1})
+    load('trialdata.mat')
+    laserPlusCS = find(trials.laser.dur>0 & trials.c_csdur>0 & trials.laser.delay==160);
+    baselineTrials = find(trials.laser.dur==0 & trials.c_csdur>0 & trials.c_usdur>0);
+    
+    inhibCR.mouse{i,1} = inhibTestDirs{i,1}(29:33);
+    [inhibCR.inhibCRAmp(i,1), inhibCR.inhibCRProb(i,1), inhibCR.inhibTrace(i,:)]=getCRProbAdjampTrace(trials, laserPlusCS);
+    
+%     day = str2double(inhibTestDirs{i,1}(end-5:end));
+%     prevday = day-1;
+%     goTo = strcat(inhibTestDirs{i,1}(1:end-6), num2str(prevday));
+%     cd(goTo)
+%     load('trialdata.mat')
+%    baselineTrials = find(trials.laser.dur==0 & trials.c_csdur>0 & trials.c_usdur>0);
+    [inhibCR.baselineCRAmp(i,1), inhibCR.baselineCRProb(i,1), inhibCR.baselineTrace(i,:)]=getCRProbAdjampTrace(trials, baselineTrials);
+end
+
+figure
+subplot(1,3,[1,2])
+a=shadedErrorBar(timeVector(1:200), nanmean(inhibCR.baselineTrace)', nanstd(inhibCR.baselineTrace)./sqrt(4), '-r', 1);
+hold on
+b=shadedErrorBar(timeVector(1:200), nanmean(inhibCR.inhibTrace)', nanstd(inhibCR.inhibTrace)./sqrt(4), '-b', 1);
+plot([0.16 0.16], [0 1], 'Color', [0 0 0], 'LineStyle', '--')
+plot([0.16+0.035 0.16+0.035], [0 1], 'Color', [0 0 0], 'LineStyle', '--')
+xlim([0 0.28])
+ylim([0 1])
+ylabel('Eyelid Position (FEC)')
+xlabel('time from tone (s)')
+legend([a.mainLine, b.mainLine], 'CS + US', 'CS + laser + US', 'Location', 'NorthWest')
+text(0.025, 0.7, 'n = 4')
+subplot(1,3,3)
+hold on
+plotMedianBoxplot(inhibCR.baselineCRAmp, 1, 0.25, [1 0 0])
+plotMedianBoxplot(inhibCR.inhibCRAmp, 2, 0.25, [0 0 1])
+ylim([0 1])
+xlim([0.5 2.5])
+ylabel('Eyelid Closure Before Puff')
+xticks([1 2])
+xticklabels({'CS + US', 'CS + laser + US'})
+text(0.75, 0.75, 't(3) = -8.22, p = 0.004')
+
+% for right this minute, just use the data from the first mouse?
 
 %% Below here is saved junk for exploratory savings analysis
 % how many days until mouse showed > 10% CRs in acquisition

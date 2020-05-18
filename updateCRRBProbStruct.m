@@ -28,6 +28,7 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
             
             baseline = nan(length(didx),1);
             cradjamp = nan(length(didx),1);
+            cradjampTm = nan(length(didx),1);
             crvel = nan(length(didx),1);
             eyelidposadj = nan(length(didx),440);
             stable = nan(length(didx),1);
@@ -35,6 +36,7 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
                 baseline(t,1) = mean(eyelidpos(didx(t,1),1:40));
                 stable(t,1) = max(eyelidpos(didx(t,1),1:40))<0.3;
                 cradjamp(t,1) = max(eyelidpos(didx(t,1),70:82))-baseline(t,1);
+                cradjampTm(t,1) = eyelidpos(didx(t,1),80)-baseline(t,1);
                 eyelidposadj(t,:) = eyelidpos(didx(t,1),:)-baseline(t,1);
                 vel = diff(eyelidpos(didx(t,1),:))./0.005;
                 crvel(t,1) = median(vel(63:76));
@@ -43,12 +45,23 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
             phase.session = [phase.session;sessioniter];
             phase.crprob = [phase.crprob;sum(stable==1 & cradjamp>=0.1 & crvel>1)./sum(stable==1)];
             phase.cradjamp = [phase.cradjamp;nanmean(cradjamp(stable==1 & cradjamp>=0.1 & crvel>1))];
+            phase.cradjampTm = [phase.cradjampTm;nanmean(cradjampTm(stable==1))];
             phase.eyelidposadj = [phase.eyelidposadj;nanmean(eyelidposadj)];
             if sum(stable==1 & cradjamp>=0.1 & crvel>1)==1
                 phase.eyelidposadjHit = [phase.eyelidposadjHit;eyelidposadj(stable==1 & cradjamp>=0.1 & crvel>1,:)];
+                
             else
                 phase.eyelidposadjHit = [phase.eyelidposadjHit;nanmean(eyelidposadj(stable==1 & cradjamp>=0.1 & crvel>1,:))];
+                
             end
+            
+%             figure
+%                 plot(timeVector, nanmean(eyelidposadj(stable==1,:)))
+%                 hold on
+%                 plot([0 0.5], [nanmean(cradjampTm(stable==1)) nanmean(cradjampTm(stable==1))])
+%                 pause
+%                 close all
+                
             
             clear baseline cradjamp eyelidposadj stable didx
             
