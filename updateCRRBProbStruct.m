@@ -83,15 +83,38 @@ function [phase]=updateCRRBProbStruct(trainingSessions, thisMouse, data, phase, 
                     baseline(t,1) = mean(eyelidpos(didx(t,1),laserOffBin-10:laserOffBin));
                     rbadjamp(t,1) = max(eyelidpos(didx(t,1),laserOffBin+1:end))-baseline(t,1);
                     rbtrace(t,:) = eyelidpos(didx(t,1),:)-baseline(t,1);
+%                     figure
+%                     plot(rbtrace(t,:))
+%                     hold on
+%                     plot([0,440], [rbadjamp(t,1), rbadjamp(t,1)])
+%                     pause
+%                     close all
+%                     
                 end
                 phase.rbamp = [phase.rbamp;nanmean(rbadjamp(rbadjamp>0.1))];
                 phase.rbprob = [phase.rbprob;sum(rbadjamp>0.1)/length(didx)];
                 phase.rbtrace = [phase.rbtrace;nanmean(rbtrace)];
+                phase.rbtraceHit = [phase.rbtraceHit;nanmean(rbtrace)];
+                if sum(rbadjamp>0.1)>1
+                    phase.rbtraceHit = [phase.rbtraceHit;nanmean(rbtrace(rbadjamp>0.1,:))];
+                elseif sum(rbadjamp>0.1)==1
+                    phase.rbtraceHit = [phase.rbtraceHit;rbtrace(rbadjamp>0.1,:)];
+                else
+                    phase.rbtraceHit = [phase.rbtraceHit;nan(size(rbtrace(1,:)))];
+                end
+                figure
+                plot(rbtrace(rbadjamp>0.1,:)')
+                hold on
+                plot(phase.rbtraceHit(end,:), 'LineWidth', 3)
+                plot([0,440], [phase.rbamp(end,1), phase.rbamp(end,1)])
+                pause
+                close all
                 clear laserOff laserOn laserOffBin baseline rbadjamp
             else
                 phase.rbamp = [phase.rbamp; NaN];
                 phase.rbprob = [phase.rbprob; NaN];
                 phase.rbtrace = [phase.rbtrace; nan(1,440)];
+                phase.rbtraceHit = [phase.rbtraceHit; nan(1,440)];
             end
             clear didx
         end

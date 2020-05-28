@@ -77,6 +77,7 @@ paired.cradjampTm = [];
 paired.rbamp = [];
 paired.rbprob = [];
 paired.rbtrace = [];
+paired.rbtraceHit = [];
 paired.eyelidposadj = [];
 paired.eyelidposadjHit = [];
 
@@ -88,6 +89,7 @@ unpaired.cradjampTm = [];
 unpaired.rbamp = [];
 unpaired.rbprob = [];
 unpaired.rbtrace = [];
+unpaired.rbtraceHit = [];
 unpaired.eyelidposadj = [];
 unpaired.eyelidposadjHit = [];
 
@@ -99,6 +101,7 @@ extinction.cradjampTm = [];
 extinction.rbamp = [];
 extinction.rbprob = [];
 extinction.rbtrace = [];
+extinction.rbtraceHit = [];
 extinction.eyelidposadj = [];
 extinction.eyelidposadjHit = [];
 
@@ -110,6 +113,7 @@ savings.cradjampTm = [];
 savings.rbamp = [];
 savings.rbprob = [];
 savings.rbtrace = [];
+savings.rbtraceHit = [];
 savings.eyelidposadj = [];
 savings.eyelidposadjHit = [];
 
@@ -118,30 +122,35 @@ rebound.prePaired.laserint = [];
 rebound.prePaired.rbamp = [];
 rebound.prePaired.rbprob = [];
 rebound.prePaired.rbtrace = [];
+rebound.prePaired.rbtraceHit = [];
 
 rebound.postPaired.mouse = {};
 rebound.postPaired.laserint = [];
 rebound.postPaired.rbamp = [];
 rebound.postPaired.rbprob = [];
 rebound.postPaired.rbtrace = [];
+rebound.postPaired.rbtraceHit = [];
 
 rebound.preUnp.mouse = {};
 rebound.preUnp.laserint = [];
 rebound.preUnp.rbamp = [];
 rebound.preUnp.rbprob = [];
 rebound.preUnp.rbtrace = [];
+rebound.preUnp.rbtraceHit = [];
 
 rebound.postUnp.mouse = {};
 rebound.postUnp.laserint = [];
 rebound.postUnp.rbamp = [];
 rebound.postUnp.rbprob = [];
 rebound.postUnp.rbtrace = [];
+rebound.postUnp.rbtraceHit = [];
 
 rebound.postExt.mouse = {};
 rebound.postExt.laserint = [];
 rebound.postExt.rbamp = [];
 rebound.postExt.rbprob = [];
 rebound.postExt.rbtrace = [];
+rebound.postExt.rbtraceHit = [];
 
 
 for m = 1:length(mice)
@@ -653,7 +662,7 @@ text(2, 0.8, ['r =',num2str(r)])
 text(2, 0.7, ['p=',num2str(p)])
 xlabel('Sessions to Extinction')
 ylabel('Rebound Probability after Training')
-
+pause
 figure
 hold on
 plot(timeVector, extphaseeyelidpos(12,:))
@@ -664,6 +673,8 @@ xlim([0 0.3])
 ylim([0 1])
 legend('B','1','2','3','4','5')
 
+disp('GOT TO PART WANT TO PAY ATTENTION TO')
+pause
 
 %% figure illustrating relationship between task acquisition and rebound acquisition
 rbprobs_withinTraining = nan(20,1);
@@ -678,11 +689,13 @@ rbtraces_extinction = nan(20,440);
 pairedphaseeyelidposThruExt = nan(20,440);
 crprobs_ext = nan(20,1);
 cramps_ext = nan(20,1);
+outsem = [];
+outsemC = [];
 for s = 1:20
     idx = paired.session==s;
     rbprobs_withinTraining(s,1) = nanmean(paired.rbprob(idx));
-    rbamps_withinTraining(s,1) = nanmean(paired.rbamp(idx));
-    temp = paired.rbtrace(idx,:);
+    rbamps_withinTraining(s,1) = nanmean(paired.rba0000000mp(idx));
+    temp = paired.rbtraceHit(idx,:);
     rbtraces_withinTraining(s,:) = nanmean(temp(~isnan(paired.rbprob(idx)),:));
     temp = paired.eyelidposadj(idx,:);
     pairedphaseeyelidposThruTrain(s,:) = nanmean(temp(~isnan(paired.rbprob(idx)),:));
@@ -694,7 +707,8 @@ for s = 1:20
     idx = extinction.session==s;
     rbprobs_extinction(s,1) = nanmean(extinction.rbprob(idx));
     rbamps_extinction(s,1) = nanmean(extinction.rbamp(idx));
-    temp = extinction.rbtrace(idx,:);
+    outsem(s,1) = nanstd(extinction.rbamp(idx))./sqrt(sum(~isnan(extinction.rbprob(idx))));
+    temp = extinction.rbtraceHit(idx,:);
     rbtraces_extinction(s,:) = nanmean(temp(~isnan(extinction.rbprob(idx)),:));
     temp = extinction.eyelidposadj(idx,:);
     pairedphaseeyelidposThruExt(s,:) = nanmean(temp(~isnan(extinction.rbprob(idx)),:));
@@ -702,6 +716,7 @@ for s = 1:20
     crprobs_ext(s,:) = nanmedian(temp(~isnan(extinction.rbprob(idx)),:));
     temp = extinction.cradjampTm(idx,:);
     cramps_ext(s,:) = nanmedian(temp(~isnan(extinction.rbprob(idx)),:));
+    outsemC(s,1) = nanstd(temp(~isnan(extinction.rbprob(idx))))./sqrt(sum(~isnan(extinction.rbprob(idx))));
 end
 [r,p]=corr(rbprobs_withinTraining(1:19), crprobs_withinTraining(1:19,1),'Type','Spearman'); % is the right way to do these comparisons to limit the number of days?
 [r,p]=corr(rbamps_withinTraining(1:19), cramps_withinTraining(1:19,1),'Type','Spearman');
@@ -765,8 +780,8 @@ hold on
 lsline
 xlim([0 1])
 ylim([0 1])
-xlabel('CR Probability')
-ylabel('Rebound Probability')
+xlabel('CR Amplitude')
+ylabel('Rebound Amplitude')
 title('extinction')
 subplot(2,4,7)
 daysToPlot = [1;3;4;5;8;9;12];
@@ -789,6 +804,20 @@ ylim([-0.025 1])
 xlabel('Time from Tone (s)')
 ylabel('Eyelid position')
 
+colordef black
+figure
+hold on
+e = errorbar(1:11, rbamps_extinction(2:12), outsem(2:12), 'LineStyle', 'none', 'Color', [0 1 1]);
+set(e, 'CapSize', 0)
+a = scatter(1:11, rbamps_extinction(2:12), 20, 'MarkerFaceColor', [0 1 1], 'MarkerEdgeColor', [0 1 1]);
+hold on
+b = scatter(1:11, cramps_ext(2:12,1),  20, 'MarkerEdgeColor', [1 1 1], 'MarkerFaceColor', [1 1 1]);
+e = errorbar(1:11, cramps_ext(2:12), outsemC(2:12), 'LineStyle', 'none', 'Color', [1 1 1]);
+set(e, 'CapSize', 0)
+ylabel('Amplitude')
+xlabel('Sessions')
+legend([a, b], 'RB Amp', 'CR Amp', 'Location', 'NorthOutside')
+ylim([0 0.6])
 
 
 %% plot data for the inhibition test trials
